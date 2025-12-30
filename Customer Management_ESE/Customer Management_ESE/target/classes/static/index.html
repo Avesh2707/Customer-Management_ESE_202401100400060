@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Management CRUD App</title>
+
+    <!-- ===== CSS ===== -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+
+        .container {
+            width: 70%;
+            margin: 40px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-box input {
+            padding: 8px;
+            flex: 1;
+        }
+
+        button {
+            padding: 8px 12px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #125ca1;
+        }
+
+        .delete-btn {
+            background: #d32f2f;
+        }
+
+        .delete-btn:hover {
+            background: #b71c1c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        table th {
+            background: #eeeeee;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Customer Management CRUD App</h1>
+
+    <!-- ===== FORM ===== -->
+    <div class="form-box">
+        <input type="hidden" id="customerId">
+        <input type="text" id="name" placeholder="Customer Name">
+        <input type="text" id="address" placeholder="Customer Address">
+
+        <button onclick="addCustomer()">Add</button>
+        <button onclick="updateCustomer()">Update</button>
+    </div>
+
+    <!-- ===== TABLE ===== -->
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="customerTable"></tbody>
+    </table>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+    const API_URL = "http://localhost:8090/customers";
+
+    window.onload = loadCustomers;
+
+    // GET
+    function loadCustomers() {
+        fetch(API_URL)
+            .then(res => res.json())
+            .then(data => {
+                const table = document.getElementById("customerTable");
+                table.innerHTML = "";
+
+                data.forEach(c => {
+                    table.innerHTML += `
+                        <tr>
+                            <td>${c.id}</td>
+                            <td>${c.name}</td>
+                            <td>${c.address}</td>
+                            <td>
+                                <button onclick="editCustomer(${c.id}, '${c.name}', '${c.address}')">Edit</button>
+                                <button class="delete-btn" onclick="deleteCustomer(${c.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    // POST
+    function addCustomer() {
+        const name = document.getElementById("name").value;
+        const address = document.getElementById("address").value;
+
+        fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, address })
+        }).then(() => {
+            clearForm();
+            loadCustomers();
+        });
+    }
+
+    // PUT
+    function updateCustomer() {
+        const id = document.getElementById("customerId").value;
+        const name = document.getElementById("name").value;
+        const address = document.getElementById("address").value;
+
+        if (!id) {
+            alert("Select a customer first");
+            return;
+        }
+
+        fetch(`${API_URL}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, address })
+        }).then(() => {
+            clearForm();
+            loadCustomers();
+        });
+    }
+
+    // DELETE
+    function deleteCustomer(id) {
+        fetch(`${API_URL}/${id}`, { method: "DELETE" })
+            .then(() => loadCustomers());
+    }
+
+    // Fill form for update
+    function editCustomer(id, name, address) {
+        document.getElementById("customerId").value = id;
+        document.getElementById("name").value = name;
+        document.getElementById("address").value = address;
+    }
+
+    function clearForm() {
+        document.getElementById("customerId").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("address").value = "";
+    }
+</script>
+
+</body>
+</html>
